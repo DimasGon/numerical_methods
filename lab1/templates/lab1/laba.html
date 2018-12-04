@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+    <header>
+        <a href="/lab1/" class="active">Лабораторная работа 1</a>
+        <a href="/lab2/">Лабораторная работа 2</a>
+        <a href="/lab3/">Лабораторная работа 3</a>
+        <a href="/lab4/">Лабораторная работа 4</a>
+    </header>
+{% endblock header %}
+
+{% block content %}
+    <section class="lab-description">
+
+        <p>Используя явную и неявную конечно-разностные схемы, а также схему Кранка - Николсона, решить начально-краевую задачу 
+        для дифференциального уравнения параболического типа. Осуществить реализацию трех вариантов аппроксимации граничных 
+        условий, содержащих производные: двухточечная аппроксимация с первым порядком, трехточечная аппроксимация со вторым 
+        порядком, двухточечная аппроксимация со вторым порядком. В различные моменты времени вычислить погрешность численного 
+        решения путем сравнения результатов с приведенным в задании аналитическим решением <span>U(x, t)</span>. Исследовать 
+        зависимость погрешности от сеточных параметров <span>&#964;, h</span>.</p>
+
+        <img src="{% static '/img/lab1.png' %}">
+
+    </section>
+
+    <section class="form-img">
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+            <input type="submit" value="Построить график">
+
+        </form>
+
+        {% if show_graph %}
+            <div class="graph">
+                <img src="{% static '/img/graph.png' %}">
+                <img src="{% static '/img/error.png' %}">
+            </div>
+
+        {% else %}
+            <img src="{% static '/img/empty.png' %}">
+
+        {% endif %}
+
+    </section>
+
+{% endblock content %}

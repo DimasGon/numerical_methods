@@ -1,0 +1,63 @@
+body, html {
+    padding: 10px 0;
+    margin: 0;
+}
+header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.active {
+    font-weight: 900;
+}
+a {
+    margin: 5px 30px;
+    text-decoration: none;
+    color: black;
+    font-size: 26px;
+}
+a:hover {
+    color: blue;
+}
+.form-img {
+    display: flex;
+    width: 100%; 
+    justify-content: center;
+}
+.form-img form {
+    padding: 0 50px;
+}
+.form-img img {
+    padding: 0 50px;
+    height: 570px;
+}
+.graph {
+    width: 60vw;
+}
+.lab-description-main {
+    padding: 10px 30px;
+}
+.lab-description-main p {
+    font-size: 18px;
+}
+.lab-description-main span {
+    font-style: italic;
+    font-size: 20px;
+}
+
+.lab-description {
+    padding: 10px 30px;
+    display: flex;
+    justify-content: baseline;
+}
+.lab-description p {
+    font-size: 18px;
+}
+.lab-description span {
+    font-style: italic;
+    font-size: 20px;
+}
+.lab-description img {
+    padding-left: 10px;
+    height: 170px;
+}

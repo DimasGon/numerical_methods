@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+    <header>
+        <a href="/lab1/">Лабораторная работа 1</a>
+        <a href="/lab2/">Лабораторная работа 2</a>
+        <a href="/lab3/" class="active">Лабораторная работа 3</a>
+        <a href="/lab4/">Лабораторная работа 4</a>
+    </header>
+{% endblock header %}
+
+{% block content %}
+    <section class="lab-description">
+
+        <p>Решить краевую задачу для дифференциального уравнения эллиптического типа. Аппроксимацию уравнения произвести с использованием
+        центрально-разностной схемы. Для решения дискретного аналога применить следующие методы: метод простых итераций (метод Либмана), метод 
+        Зейделя, метод простых итераций с верхней релаксацией. Вычислить погрешность численного решения путем сравнения результатов с 
+        приведенным в задании аналитическим решением <span>U(x, t)</span>. Исследовать зависимость погрешности от сеточных параметров 
+        <span>hx, hy</span>.</p>
+
+        <img src="{% static '/img/lab3.png' %}">
+    </section>
+
+    <section class="form-img">
+        
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+            <input type="submit" value="Построить график">
+
+        </form>
+
+        {% if show_graph %}
+            <div class="graph">
+                <img src="{% static '/img/graph.png' %}">
+                <img src="{% static '/img/error.png' %}">
+            </div>
+
+        {% else %}
+            <img src="{% static '/img/empty.png' %}">
+        {% endif %}
+
+    </section>
+
+{% endblock content %}

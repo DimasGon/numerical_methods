@@ -19,3 +19,4 @@ class InputDataForm(forms.Form):
     # x_end = forms.FloatField(label='Окончание отчета по иксу', required=True)
     t_end = forms.FloatField(label='Окончание по времени', required=True)
     num_split = forms.FloatField(label='Количество разбиений икса', required=True)
+    sigma = forms.FloatField(label='Число Куранта', required=True)

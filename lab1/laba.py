@@ -24,22 +24,23 @@ def right_cond(a, t):
     """Граничное условие"""
     return -np.exp(-a * t)
 
-def count_time_interval(h, a, T):
+def count_time_interval(h, a, T, sigma):
     """Подсчет количества временных интервалов"""
-    return math.ceil(T * 2 * a / h**2)
+    return math.ceil(T * 2 * a / (h**2 * sigma))
 
-def get_error(x_vals, time_result, t, a, K):
+def get_error(x_vals, time_vals, result, T, K, a):
     """
     Ошибка расчитывается как норма
     разности аналитического и численного решения
-
     """
-    error = []
-    i = 0
-    for x in x_vals:
-        error.append(time_result[i] - analytical_solution(x, t, a))
-        i += 1
-    return np.linalg.norm(error)
+    res_error = []
+    for k, t in enumerate(time_vals):
+        true_res = []
+        for x in x_vals:
+            true_res.append(analytical_solution(x, t, a))
+        error = np.array(true_res) - np.array(result[k])
+        res_error.append(np.linalg.norm(error))
+    return res_error
 
 def explicit_method(a, N, K, L, T, x_vals, approx_type):
     """
@@ -51,11 +52,11 @@ def explicit_method(a, N, K, L, T, x_vals, approx_type):
     T - временной промеждуток
     h - шаг по X
     tao - шаг по T
-
     """
     u = []
     h = L / N
     tao = T / K
+    print(h, tao)
     sigma = a * tao / (h ** 2)
     k = 0
     err = []
@@ -136,13 +137,13 @@ def combined_method(a, N, K, L, T, x_vals, approx_type, teta):
             u.append(time_result)
     return u
 
-def solve(a, n, T, approx_type, scheme):
+def solve(a, n, T, sigma, approx_type, scheme):
     exact_solution = []
     L = np.pi
     h = L / n
-    K = count_time_interval(h, a, T)
+    K = count_time_interval(h, a, T, sigma)
     x_vals = [x for x in np.linspace(0, L, n + 1)]
-    # time_vals = [t for t in np.linspace(0, T, K)]
+    time_vals = [t for t in np.linspace(0, T, K)]
     if scheme == 'Явный':
         result = explicit_method(a, n, K, L, T, x_vals, approx_type)
     elif scheme == 'Неявный':
@@ -161,8 +162,8 @@ def solve(a, n, T, approx_type, scheme):
     plt.savefig('graph.png', format='png', dpi=300)
     plt.clf()
     
-    error = np.array(exact_solution) - np.array(result[K])
-    plt.plot(x_vals, error, color='blue')
+    error = get_error(x_vals, time_vals, result, T, K, a)
+    plt.plot(time_vals, error, color='blue')
     plt.grid(True)
     plt.title('Погрешность')
     plt.savefig('error.png', format='png', dpi=300)

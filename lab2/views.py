@@ -7,7 +7,6 @@ from .laba import solve
 class Lab2View(View):
 
     template_name = 'lab2/laba.html'
-    show_graph = False
 
     def get(self, request):
 
@@ -24,8 +23,9 @@ class Lab2View(View):
         # x_end = float(request.POST.get('x_end'))
         t_end = float(request.POST.get('t_end'))
         num_split = int(request.POST.get('num_split'))
+        sigma = float(request.POST.get('sigma'))
 
-        solve(method, approximation, second_initial_condition, t_end, num_split)
+        solve(method, approximation, second_initial_condition, t_end, num_split, sigma)
         root_dir = os.path.abspath(os.curdir)
         os.remove(root_dir + '\common_static\img\graph.png')
         os.remove(root_dir + '\common_static\img\error.png')

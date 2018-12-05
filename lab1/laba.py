@@ -56,10 +56,8 @@ def explicit_method(a, N, K, L, T, x_vals, approx_type):
     u = []
     h = L / N
     tao = T / K
-    print(h, tao)
     sigma = a * tao / (h ** 2)
     k = 0
-    err = []
     for t in np.linspace(0, T, K + 1):
         if t == 0:
             time_result = []
@@ -142,6 +140,7 @@ def solve(a, n, T, sigma, approx_type, scheme):
     L = np.pi
     h = L / n
     K = count_time_interval(h, a, T, sigma)
+    
     x_vals = [x for x in np.linspace(0, L, n + 1)]
     time_vals = [t for t in np.linspace(0, T, K)]
     if scheme == 'Явный':

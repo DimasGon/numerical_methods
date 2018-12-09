@@ -15,10 +15,6 @@ class InputDataForm(forms.Form):
         ('1-ого порядка', '1-ого порядка'),
         ('2-ого порядка', '2-ого порядка'),
     )
-    CHOICES_OVERLAY = (
-        ('0', 'Да'),
-        ('1', 'Нет'),
-    )
 
     method = forms.ChoiceField(label='Выберите метод решения', choices=CHOICES_METHOD, widget=forms.RadioSelect, required=True)
     approximation = forms.ChoiceField(label='Выберите аппроксимацию', choices=CHOICES_APPROXIMATION, widget=forms.RadioSelect, required=True)

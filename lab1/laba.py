@@ -124,18 +124,6 @@ def threepoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
 #         u[k] = linalg.solve(A, B)
 #     return u
 
-def split(start, end, step):
-    """Разбиение от start до end с шагом step. Значение end попадает в конец результирующего numpy array"""
-
-    spliting = []
-    i = start
-    while i < end:
-        spliting.append(i)
-        i = round(i + step, 10)
-    spliting.append(end)
-
-    return array(spliting)
-
 def get_error(split_x, split_t, u, N, last_layer, U):
     error = zeros((last_layer))
     for k, t in enumerate(split_t):
@@ -162,8 +150,9 @@ def solve(method, approximation, num_split, t_end, sigma, a):
 
     split_x = linspace(x0, xN, num_split)
     h = round(split_x[1] - split_x[0], 10)
-    t = round(h * sigma / a, 10)
-    split_t = split(t_start, t_end, t)
+    num_split = int(t_end / (h**2 * sigma / a)) + 1
+    split_t = linspace(t_start, t_end, num_split)
+    t = split_t[1] - split_t[0]
 
     N = len(split_x)
     last_layer = len(split_t)

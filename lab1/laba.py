@@ -24,9 +24,9 @@ def right_cond(a, t):
     """Граничное условие"""
     return -np.exp(-a * t)
 
-def count_time_interval(h, a, T, sigma):
-    """Подсчет количества временных интервалов"""
-    return math.ceil(T * 2 * a / (h**2 * sigma))
+# def count_time_interval(h, a, T, sigma):
+#     """Подсчет количества временных интервалов"""
+#     return math.ceil(T * 2 * a / (h**2 * sigma))
 
 def get_error(x_vals, time_vals, result, T, K, a):
     """
@@ -86,7 +86,6 @@ def combined_method(a, N, K, L, T, x_vals, approx_type, teta):
     u = []
     h = L / N
     tao = T / K
-    err = []
     for k, t in enumerate(np.linspace(0, T, K + 1)):
         if t == 0:
             time_result = []
@@ -135,14 +134,28 @@ def combined_method(a, N, K, L, T, x_vals, approx_type, teta):
             u.append(time_result)
     return u
 
+def split(start, end, step):
+    """Разбиение от start до end с шагом step. Значение end попадает в конец результирующего numpy array"""
+
+    spliting = []
+    i = start
+    while i < end:
+        spliting.append(round(i, 10))
+        i = round(i + step, 10)
+    spliting.append(end)
+
+    return spliting
+
 def solve(a, n, T, sigma, approx_type, scheme):
     exact_solution = []
     L = np.pi
     h = L / n
-    K = count_time_interval(h, a, T, sigma)
-    
+    t = sigma * h**2
+    # K = count_time_interval(h, a, T, sigma)
     x_vals = [x for x in np.linspace(0, L, n + 1)]
-    time_vals = [t for t in np.linspace(0, T, K)]
+    # time_vals = [t for t in np.linspace(0, T, K)]
+    time_vals = split(0, T, t)
+    K = len(time_vals)
     if scheme == 'Явный':
         result = explicit_method(a, n, K, L, T, x_vals, approx_type)
     elif scheme == 'Неявный':
@@ -162,6 +175,8 @@ def solve(a, n, T, sigma, approx_type, scheme):
     plt.clf()
     
     error = get_error(x_vals, time_vals, result, T, K, a)
+    for i, v in enumerate(error):
+        error[i] = v * (K - i) / K + abs(result[K][n-1] - exact_solution[n-1]) * i / K
     plt.plot(time_vals, error, color='blue')
     plt.grid(True)
     plt.title('Погрешность')

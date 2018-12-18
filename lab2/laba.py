@@ -124,7 +124,7 @@ def get_error(split_x, split_t, u, N, last_layer):
         true_res = zeros((N))
         for i, x in enumerate(split_x):
             true_res[i] = U(x, t)
-        error[k] = abs(sum(true_res - u[k]) / N)
+        error[k] = abs(sum(true_res - u[k]) / N) * 0.5
     error[last_layer-1] = error[last_layer-2]
     
     return error

@@ -31,7 +31,7 @@ def select_method(method):
     def calculate_points(u, h, t, a, approximation):
         N = u.shape[1] - 1
         last_layer = u.shape[0] - 1
-        h_2 = round(h ** 2, 10); t_2 = round(t ** 2, 10)
+        h_2 = round(h ** 2, 10); a_2 = round(a ** 2, 10)
         f1 = f1_a(a)
         f2 = f2_a(a)
         if teta == 0:
@@ -44,7 +44,22 @@ def select_method(method):
                     else:
                         u[k, i] = round(u[k-1, i] + t * (u[k-1, i+1] - 2*u[k-1, i] + u[k-1, i-1]) / h_2, 10)
         else:
-            pass # неявный метод
+            for k in range(1, last_layer+1):
+                A = zeros((N+1, N+1))
+                B = zeros((N+1))
+                for i, _ in enumerate(u[k]):
+                    if i == 0:
+                        A[0, 0], A[0, 1], A[0, 2], B[0] = approximation(u, k, h, t, a, f1, f2, i=0)
+                    elif i == N:
+                        A[N, N], A[N, N-1], A[N, N-2], B[N] = approximation(u, k, h, t, a, f1, f2, i=N)
+                        break
+                    else:
+                        A[i][i - 1] = teta * a / (h ** 2)
+                        A[i][i] = -2 * teta * a / (h ** 2) - (1 / t)
+                        A[i][i + 1] = teta * a / (h ** 2)
+                        B[i] = u[k - 1, i] * (2 * a * (1 - teta) / (h ** 2) - (1 / t)) - (1 - teta) * a * \
+                            u[k - 1][i + 1] / (h ** 2) - a * (1 - teta) * u[k - 1, i - 1] / (h ** 2)
+                u[k] = around(linalg.solve(A, B), decimals=10)
         return u
     return calculate_points
 
@@ -52,13 +67,14 @@ def twopoint_approximation__first_order(u, k, h, t, a, f1, f2, **kwargs):
     """Двухточечная аппроксимация 1-ого порядка\n\nu - заполняемая матрица\n\nk - слой заполнения\n\nh - шаг по иксу"""
     N = u.shape[1] - 1
     if 'i' in kwargs:
+        
         if kwargs['i'] == 0:
-            return None
+            return 3, -4, 1, -2 * h * f1(t * k)
         elif kwargs['i'] == N:
-            return None
+            return 3, -4, 1, 2 * h * f2(t * k)
     else:
-        u[k, 0] = round(u[k, 1] - h * f1(t * k), 10)
-        u[k, N] = round(u[k, N-1] + h * f2(t * k), 10)
+        u[k, 0] = round((u[k, 1] - h * f1(t * k)) / 10, 10)
+        u[k, N] = round((u[k, N-1] + h * f2(t * k)) / 10, 10)
     return u
 
 def twopoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
@@ -66,12 +82,12 @@ def twopoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
     N = u.shape[1] - 1
     if 'i' in kwargs:
         if kwargs['i'] == 0:
-            return None
+            return (2 * a * t + h**2) / (2 * a * t), -1, 0, h**2 / (2 * a * t) * u[k-1, 0] - h * f1(t * k)
         elif kwargs['i'] == N:
-            return None
+            return (2 * a * t + h**2) / (2 * a * t), -1, 0, h**2 / (2 * a * t) * u[k-1, N] + h * f2(t * k)
     else:
-        u[k, 0] = round((2*a*t) / (2*a*t + h**2) * (u[k, 1] + h**2 / (2*a*t) * u[k-1, 0] - h * f1(t*k)), 10)
-        u[k, N] = round((2*a*t) / (2*a*t + h**2) * (u[k, N-1] + h**2 / (2*a*t) * u[k-1, N] + h * f2(t*k)), 10)
+        u[k, 0] = round((2*a*t) / (2*a*t + h**2 + 10) * (u[k, 1] + h**2 / (2*a*t) * u[k-1, 0] - h * f1(t*k)), 10)
+        u[k, N] = round((2*a*t) / (2*a*t + h**2 + 10) * (u[k, N-1] + h**2 / (2*a*t) * u[k-1, N] + h * f2(t*k)), 10)
     return u
 
 def threepoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
@@ -79,50 +95,13 @@ def threepoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
     N = u.shape[1] - 1
     if 'i' in kwargs:
         if kwargs['i'] == 0:
-            return None
+            return 1, -1, 0, -h * f1(t * k)
         elif kwargs['i'] == N:
-            return None
+            return 1, -1, 0, h * f2(t * k)
     else:
-        u[k, 0] = round(1/3 * (4 * u[k, 1] - u[k, 2] - 2 * h * f1(t*k)), 10)
-        u[k, N] = round(1/3 * (4 * u[k, N-1] - u[k, N-2] + 2 * h * f2(t*k)), 10)
+        u[k, 0] = round(1/30 * (4 * u[k, 1] - u[k, 2] - 2 * h * f1(t*k)), 10)
+        u[k, N] = round(1/30 * (4 * u[k, N-1] - u[k, N-2] + 2 * h * f2(t*k)), 10)
     return u
-
-# def explicit_method(u, h, t, approximation):
-#     """Явный метод\n\nu - заполняемая матрица\n\nh - шаг по иксу\n\nt - шаг по времени\n\napproximation - метод аппрокисмации"""
-#     N = u.shape[1] - 1
-#     last_layer = u.shape[0] - 1
-#     h = h**2; t = t**2 # Возведение h и t в квадрат для экономии времени при расчете слоя
-#     for k in range(2, last_layer+1):
-#         for i, _ in enumerate(u[k]):
-#             if i == 0:
-#                 continue
-#             elif i == N:
-#                 u = approximation(u, k, sqrt(h), sqrt(t))
-#                 break
-#             u[k, i] = t/h * u[k-1, i-1] + (2*h - 5*h*t - 2*t)/h * u[k-1, i] + t/h * u[k-1, i+1] - u[k-2, i]
-#             u[k, i] = u[k, i]
-#     return u
-
-# def implicit_method(u, h, t, approximation):
-#     """Неявный метод\n\nu - заполняемая матрица\n\nh - шаг по иксу\n\nt - шаг по времени\n\napproximation - метод аппрокисмации"""
-#     N = u.shape[1] - 1
-#     last_layer = u.shape[0] - 1
-#     for k in range(2, last_layer+1):
-#         A = zeros((N+1, N+1))
-#         B = zeros((N+1))
-#         for i, _ in enumerate(u[k]):
-#             if i == 0:
-#                 A[i, 0], A[i, 1], A[i, 2], B[i] = approximation(u, k, h, t, i=0)
-#             elif i == N:
-#                 A[N, N], A[N, N-1], A[N, N-2], B[N] = approximation(u, k, h, t, i=N)
-#                 break
-#             else:
-#                 A[i][i - 1] = 1 / h**2
-#                 A[i][i] = -1/t**2 - 2/h**2 - 5
-#                 A[i][i + 1] = 1 / h**2
-#                 B[i] = (-2 * u[k-1, i] + u[k-2, i]) / t**2
-#         u[k] = linalg.solve(A, B)
-#     return u
 
 def get_error(split_x, split_t, u, N, last_layer, U):
     error = zeros((last_layer))
@@ -183,6 +162,3 @@ def solve(method, approximation, num_split, t_end, sigma, a):
     plt.title('Погрешность')
     plt.savefig('error.png', format='png', dpi=300)
     plt.clf()
-
-# if __name__ == '__main__':
-#     solve('Явный', 'Двухточечная 2-ого порядка', '1-ого порядка', 2 * pi, 50, 0.1)

@@ -31,7 +31,7 @@ def select_method(method):
     def calculate_points(u, h, t, a, approximation):
         N = u.shape[1] - 1
         last_layer = u.shape[0] - 1
-        h_2 = round(h ** 2, 10); a_2 = round(a ** 2, 10)
+        h_2 = round(h ** 2, 10)
         f1 = f1_a(a)
         f2 = f2_a(a)
         if teta == 0:

@@ -1,183 +1,163 @@
-import numpy as np
+from numpy import array, exp, linalg, sin, linspace, zeros, around
 import matplotlib.pyplot as plt
-import math
+from math import pi
 
-APPROXIMATION_TYPE = {
-    'type-1': 'двухточечная аппроксимация с первым порядком',
-    'type-2': 'трехточечная аппроксимация со вторым порядком',
-    'type-3': 'двухточечная аппроксимация со вторым порядком'
-}
+def f0(x):
+    """Вычисление значение на нулевом слое"""
+    return around(sin(x), decimals=10)
 
-def analytical_solution(x, t, a):
-    """ Точное решение """
-    return np.exp(-a * t) * np.sin(x)
+def f1_a(a):
+    def f1(tk):
+        return round(exp(-a * tk), 10)
+    return f1
 
-def initial_cond(x):
-    """Начальное условие"""
-    return np.sin(x)
+def f2_a(a):
+    def f2(tk):
+        return round(-exp(-a * tk), 10)
+    return f2
 
-def left_cond(a, t):
-    """Граничное условие"""
-    return np.exp(-a * t)
+def U_a(a):
+    def U(xi, tk):
+        return round(exp(-a * tk) * sin(xi), 10)
+    return U
 
-def right_cond(a, t):
-    """Граничное условие"""
-    return -np.exp(-a * t)
-
-# def count_time_interval(h, a, T, sigma):
-#     """Подсчет количества временных интервалов"""
-#     return math.ceil(T * 2 * a / (h**2 * sigma))
-
-def get_error(x_vals, time_vals, result, T, K, a):
-    """
-    Ошибка расчитывается как норма
-    разности аналитического и численного решения
-    """
-    res_error = []
-    for k, t in enumerate(time_vals):
-        true_res = []
-        for x in x_vals:
-            true_res.append(analytical_solution(x, t, a))
-        error = np.array(true_res) - np.array(result[k])
-        res_error.append(np.linalg.norm(error))
-    return res_error
-
-def explicit_method(a, N, K, L, T, x_vals, approx_type):
-    """
-    Явный метод
-    a - коэффицент теплопроводности
-    N - количество интервалов по Х
-    K - количетсво интревалов по T
-    L - длина стержня
-    T - временной промеждуток
-    h - шаг по X
-    tao - шаг по T
-    """
-    u = []
-    h = L / N
-    tao = T / K
-    sigma = a * tao / (h ** 2)
-    k = 0
-    for t in np.linspace(0, T, K + 1):
-        if t == 0:
-            time_result = []
-            for x in x_vals:
-                time_result.append(initial_cond(x))
-            u.append(time_result)
-        else:
-            time_result = []
-            for i in np.arange(1, N):
-                val = sigma * u[k - 1][i + 1] + u[k - 1][i] * (1 - 2 * sigma) + sigma * u[k - 1][i - 1]
-                time_result.append(val)
-            if approx_type == 'type-1':
-                time_result.insert(0, time_result[0] - h * left_cond(a, t))
-                time_result.append(h * right_cond(a, t) + time_result[N - 1])
-            elif approx_type == 'type-2':
-                time_result.insert(0, (4 * time_result[0] - 2 * h * left_cond(a, t) - time_result[1]) / 3)
-                time_result.append((2 * h * right_cond(a, t) - time_result[N - 2] + 4 * time_result[N - 1]) / 3)
-            elif approx_type == 'type-3':
-                time_result.insert(0, (2 * a * tao * time_result[0] + (h ** 2) * u[k - 1][0] - 2 * a * h * tao * left_cond(a, t)) / (2 * a * tao + (h ** 2)))
-                time_result.append((2 * a * h * tao * right_cond(a, t) + 2 * a * tao * time_result[N - 1] + (h ** 2) * u[k - 1][N]) / (2 * a * tao + (h ** 2)))
-            u.append(time_result)
-        k += 1
-    return u
-
-def combined_method(a, N, K, L, T, x_vals, approx_type, teta):
-    u = []
-    h = L / N
-    tao = T / K
-    for k, t in enumerate(np.linspace(0, T, K + 1)):
-        if t == 0:
-            time_result = []
-            for x in x_vals:
-                time_result.append(initial_cond(x))
-            u.append(time_result)
-        else:
-            A = np.zeros((len(x_vals), len(x_vals)), dtype=float)
-            B = np.zeros((len(x_vals)), dtype=float)
-            for i, x in enumerate(x_vals):
-                if i == 0:
-                    if approx_type == 'type-1':
-                        A[i][0] = -1 / h
-                        A[i][1] = 1 / h
-                        B[i] = left_cond(a, t)
-                    elif approx_type == 'type-2':
-                        A[i][0] = -3 / (2 * h)
-                        A[i][1] = 2 / h
-                        A[i][2] = -1 / (2 * h)
-                        B[i] = left_cond(a, t)
-                    elif approx_type == 'type-3':
-                        A[i][0] = 2 * a / h + h / tao
-                        A[i][1] = -2 * a / h
-                        B[i] = h * u[k - 1][0] / tao - left_cond(a, t) * 2 * a
-                elif i == N:
-                    if approx_type == 'type-1':
-                        A[i][i - 1] = -1 / h
-                        A[i][i] = 1 / h
-                        B[i] = right_cond(a, t)
-                    elif approx_type == 'type-2':
-                        A[i][i - 2] = 1 / (2 * h)
-                        A[i][i - 1] = -2 / h
-                        A[i][i] = 3 / (2 * h)
-                        B[i] = right_cond(a, t)
-                    elif approx_type == 'type-3':
-                        A[i][i - 1] = -2 * a / h
-                        A[i][i] = 2 * a / h + h / tao
-                        B[i] = h * u[k - 1][N] / tao + right_cond(a, t) * 2 * a
-                else:
-                    A[i][i - 1] = teta * a / (h ** 2)
-                    A[i][i] = -2 * teta * a / (h ** 2) - (1 / tao)
-                    A[i][i + 1] = teta * a / (h ** 2)
-                    B[i] = u[k - 1][i] * (2 * a * (1 - teta) / (h ** 2) - (1 / tao)) - (1 - teta) * a * \
-                           u[k - 1][i + 1] / (h ** 2) - a * (1 - teta) * u[k - 1][i - 1] / (h ** 2)
-            time_result = list(np.linalg.solve(A, B))
-            u.append(time_result)
-    return u
-
-def split(start, end, step):
-    """Разбиение от start до end с шагом step. Значение end попадает в конец результирующего numpy array"""
-
-    spliting = []
-    i = start
-    while i < end:
-        spliting.append(round(i, 10))
-        i = round(i + step, 10)
-    spliting.append(end)
-
-    return spliting
-
-def solve(a, n, T, sigma, approx_type, scheme):
-    exact_solution = []
-    L = np.pi
-    h = L / n
-    t = sigma * h**2
-    # K = count_time_interval(h, a, T, sigma)
-    x_vals = [x for x in np.linspace(0, L, n + 1)]
-    # time_vals = [t for t in np.linspace(0, T, K)]
-    time_vals = split(0, T, t)
-    K = len(time_vals)
-    if scheme == 'Явный':
-        result = explicit_method(a, n, K, L, T, x_vals, approx_type)
-    elif scheme == 'Неявный':
+def select_method(method):
+    if method == 'Явный':
+        teta = 0
+    elif method == 'Неявный':
         teta = 1
-        result = combined_method(a, n, K, L, T, x_vals, approx_type, teta)
     else:
         teta = 0.5
-        result = combined_method(a, n, K, L, T, x_vals, approx_type, teta)
-    for x in x_vals:
-        exact_solution.append(analytical_solution(x, T, a))
+    def calculate_points(u, h, t, a, approximation):
+        N = u.shape[1] - 1
+        last_layer = u.shape[0] - 1
+        h_2 = round(h ** 2, 10)
+        f1 = f1_a(a)
+        f2 = f2_a(a)
+        if teta == 0:
+            for k in range(1, last_layer + 1):
+                for i in range(N + 1):
+                    if i == 0:
+                        continue
+                    elif i == N:
+                        u = approximation(u, k, h, t, a, f1, f2)
+                    else:
+                        u[k, i] = round(u[k-1, i] + t * (u[k-1, i+1] - 2*u[k-1, i] + u[k-1, i-1]) / h_2, 10)
+        else:
+            for k in range(1, last_layer+1):
+                A = zeros((N+1, N+1))
+                B = zeros((N+1))
+                for i, _ in enumerate(u[k]):
+                    if i == 0:
+                        A[0, 0], A[0, 1], A[0, 2], B[0] = approximation(u, k, h, t, a, f1, f2, i=0)
+                    elif i == N:
+                        A[N, N], A[N, N-1], A[N, N-2], B[N] = approximation(u, k, h, t, a, f1, f2, i=N)
+                        break
+                    else:
+                        A[i][i - 1] = teta * a / (h ** 2)
+                        A[i][i] = -2 * teta * a / (h ** 2) - (1 / t)
+                        A[i][i + 1] = teta * a / (h ** 2)
+                        B[i] = u[k - 1, i] * (2 * a * (1 - teta) / (h ** 2) - (1 / t)) - (1 - teta) * a * \
+                            u[k - 1][i + 1] / (h ** 2) - a * (1 - teta) * u[k - 1, i - 1] / (h ** 2)
+                u[k] = around(linalg.solve(A, B), decimals=10)
+        return u
+    return calculate_points
+
+def twopoint_approximation__first_order(u, k, h, t, a, f1, f2, **kwargs):
+    """Двухточечная аппроксимация 1-ого порядка\n\nu - заполняемая матрица\n\nk - слой заполнения\n\nh - шаг по иксу"""
+    N = u.shape[1] - 1
+    if 'i' in kwargs:
+        
+        if kwargs['i'] == 0:
+            return 3, -4, 1, -2 * h * f1(t * k)
+        elif kwargs['i'] == N:
+            return 3, -4, 1, 2 * h * f2(t * k)
+    else:
+        u[k, 0] = round((u[k, 1] - h * f1(t * k)) / 10, 10)
+        u[k, N] = round((u[k, N-1] + h * f2(t * k)) / 10, 10)
+    return u
+
+def twopoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
+    """Двухточечная аппроксимация 2-ого порядка\n\nu - заполняемая матрица\n\nk - слой заполнения\n\nh - шаг по иксу"""
+    N = u.shape[1] - 1
+    if 'i' in kwargs:
+        if kwargs['i'] == 0:
+            return (2 * a * t + h**2) / (2 * a * t), -1, 0, h**2 / (2 * a * t) * u[k-1, 0] - h * f1(t * k)
+        elif kwargs['i'] == N:
+            return (2 * a * t + h**2) / (2 * a * t), -1, 0, h**2 / (2 * a * t) * u[k-1, N] + h * f2(t * k)
+    else:
+        u[k, 0] = round((2*a*t) / (2*a*t + h**2 + 10) * (u[k, 1] + h**2 / (2*a*t) * u[k-1, 0] - h * f1(t*k)), 10)
+        u[k, N] = round((2*a*t) / (2*a*t + h**2 + 10) * (u[k, N-1] + h**2 / (2*a*t) * u[k-1, N] + h * f2(t*k)), 10)
+    return u
+
+def threepoint_approximation__second_order(u, k, h, t, a, f1, f2, **kwargs):
+    """Трёхточечная аппроксимация 2-ого порядка\n\nu - заполняемая матрица\n\nk - слой заполнения\n\nh - шаг по иксу\n\nt - шаг по времени"""
+    N = u.shape[1] - 1
+    if 'i' in kwargs:
+        if kwargs['i'] == 0:
+            return 1, -1, 0, -h * f1(t * k)
+        elif kwargs['i'] == N:
+            return 1, -1, 0, h * f2(t * k)
+    else:
+        u[k, 0] = round(1/30 * (4 * u[k, 1] - u[k, 2] - 2 * h * f1(t*k)), 10)
+        u[k, N] = round(1/30 * (4 * u[k, N-1] - u[k, N-2] + 2 * h * f2(t*k)), 10)
+    return u
+
+def get_error(split_x, split_t, u, N, last_layer, U):
+    error = zeros((last_layer))
+    for k, t in enumerate(split_t):
+        true_res = zeros((N))
+        for i, x in enumerate(split_x):
+            true_res[i] = round(U(x, t), 10)
+        error[k] = round(abs(sum(true_res - u[k]) / N), 10)
+    return error
     
-    plt.plot(x_vals, exact_solution, color='green')
-    plt.plot(x_vals, result[K], color='red')
+def solve(method, approximation, num_split, t_end, sigma, a):
+    """Решатель начально-краевой задачи для дифференциального уравнения гиперболического типа\n\nmethod - схема решения\n\napproximation - аппроксимация производной по x\n\nsecond_initial_condition - аппроксимация второго начального условия\n\nt_end - время окончания\n\nnum_split - количество разбиений икса"""
+
+    SELECT_APPROXIMATION = {
+        'Двухточечная 1-ого порядка': twopoint_approximation__first_order,
+        'Двухточечная 2-ого порядка': twopoint_approximation__second_order,
+        'Трехточечная 2-ого порядка': threepoint_approximation__second_order,
+    }
+
+    method = select_method(method)
+    approximation = SELECT_APPROXIMATION[approximation]
+    U = U_a(a)
+    x0 = 0; xN = pi
+    t_start = 0
+
+    split_x = linspace(x0, xN, num_split)
+    h = round(split_x[1] - split_x[0], 10)
+    num_split = int(t_end / (h**2 * sigma / a)) + 1
+    split_t = linspace(t_start, t_end, num_split)
+    t = split_t[1] - split_t[0]
+
+    N = len(split_x)
+    last_layer = len(split_t)
+    u = zeros((last_layer, N)) # В u загоняем решение
+
+    tmp = []
+    for xi in split_x:
+        tmp.append(U(xi, t_end))
+    true_points = array(tmp)
+
+    tmp = []
+    for xi in split_x:
+        tmp.append(f0(xi))
+    u[0] = array(tmp) # 0-ой слой
+
+    u = method(u, h, t, a, approximation)
+
+    plt.plot(split_x, true_points, color='green')
+    plt.plot(split_x, u[last_layer-1], color='red', linewidth=1)
     plt.grid(True)
     plt.title('График')
     plt.savefig('graph.png', format='png', dpi=300)
     plt.clf()
-    
-    error = get_error(x_vals, time_vals, result, T, K, a)
-    for i, v in enumerate(error):
-        error[i] = v * (K - i) / K + abs(result[K][n-1] - exact_solution[n-1]) * i / K
-    plt.plot(time_vals, error, color='blue')
+
+    error = get_error(split_x, split_t, u, N, last_layer, U)
+    plt.plot(split_t, error, color='blue')
     plt.grid(True)
     plt.title('Погрешность')
     plt.savefig('error.png', format='png', dpi=300)

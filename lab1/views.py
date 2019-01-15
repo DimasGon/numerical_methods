@@ -24,10 +24,10 @@ class Lab1View(View):
         sigma = float(request.POST.get('sigma'))
         solve(method, approximation, num_split, t_end, sigma, a)
         root_dir = os.path.abspath(os.curdir)
-        os.remove(root_dir + '\common_static\img\graph.png')
-        os.remove(root_dir + '\common_static\img\error.png')
-        os.rename(root_dir + '\graph.png', root_dir + '\common_static\img\graph.png')
-        os.rename(root_dir + '\error.png', root_dir + '\common_static\img\error.png')
+        os.remove(root_dir + '/common_static/img/graph.png')
+        os.remove(root_dir + '/common_static/img/error.png')
+        os.rename(root_dir + '/graph.png', root_dir + '/common_static/img/graph.png')
+        os.rename(root_dir + '/error.png', root_dir + '/common_static/img/error.png')
         form = InputDataForm(request.POST)
         return render(request, self.template_name, {
             'form': form, 'show_graph': True,

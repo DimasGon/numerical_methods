@@ -1,3 +1,5 @@
 *.cpython-37.pyc
 *.ini
 .vscode/launch.json
+*.cpython-36.pyc
+.vscode/settings.json

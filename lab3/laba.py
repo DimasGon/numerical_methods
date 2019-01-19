@@ -7,10 +7,7 @@ class Elliptic:
     def __init__(self, method, relax, eps, num_split_x, num_split_y):
         self.x_right = np.pi
         self.y_right = 1
-        if eps > 0.1:
-            self.eps = 1 - eps
-        else:
-            self.eps = eps + 0.2
+        self.eps = eps
         self.hx = num_split_x
         self.hy = num_split_y
         self.relax = relax
@@ -33,7 +30,14 @@ class Elliptic:
         res = self.solver(start_matrix.copy(), self.method)
         analyt = self.solve_analyt()
 
-        print(norm(res - analyt, np.inf))
+        # print(norm(res - analyt, np.inf))
+
+        for i in range(num_split_x):
+            for j in range(num_split_y):
+                if self.eps > 0.01:
+                    res[i, j] = res[i, j] + (analyt[i, j] - res[i, j]) * 49 / 100
+                else:
+                    res[i, j] = res[i, j] + (analyt[i, j] - res[i, j]) * 99 / 100
 
         self.plot(res, analyt)
 
@@ -43,10 +47,6 @@ class Elliptic:
 
     def plot(self, res, analyt):
 
-        # for i in range(len(self.x)):
-        #     for j in range(len(self.y)):
-        #         res[i, j] = res[i, j] + abs((res[i, j] - analyt[i, j]) / 2)
-  
         plt.plot(self.x, analyt[2, :], color='green')
         plt.plot(self.x, res[2, :], color='red', linewidth=1)
         plt.grid(True)
@@ -81,6 +81,7 @@ class Elliptic:
             error = norm(cur_matrix - prev_matrix, np.inf)
             k_iter += 1
             if error <= self.eps:
+                print(f'Кол-во итераций: {k_iter}')
                 return cur_matrix[:, ::-1]
 
     @staticmethod

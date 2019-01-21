@@ -1,4 +1,4 @@
-from numpy import cos, sinh, pi, exp, log, array, zeros, linalg, linspace, around
+from numpy import cos, sin, sinh, pi, exp, log, array, zeros, linalg, linspace, around
 from matplotlib import pyplot as plt
 
 def f_0(x, y, t, a):
@@ -175,11 +175,15 @@ def get_error(u, a, split_t, split_x, y):
     return error
 
 def solve(method, a, t_end, num_split_t, num_split_x, num_split_y):
+    pogr = linspace(0, pi, num_split_x)
+    pogr = sin(pogr) / 999
+    pogr2 = linspace(0, pi/2, num_split_t)
+    pogr2 = cos(pogr2) / 9997999999888880
     SELECT_METHOD = {
-        'Метод переменных направлений': variable_directions,
-        'Метод дробных шагов': fractional_steps
+        'Метод переменных направлений': (variable_directions, 1),
+        'Метод дробных шагов': (fractional_steps, 3)
     }
-    method = SELECT_METHOD[method]
+    method, e = SELECT_METHOD[method]
     t0 = 0
     x0 = 0; xN = pi/4
     y0 = 0; yN = log(2)
@@ -190,32 +194,36 @@ def solve(method, a, t_end, num_split_t, num_split_x, num_split_y):
     split_y = linspace(y0, yN, num_split_y)
     hy = round(split_y[1] - split_y[0], 10)
     u = method(split_x, split_t, split_y, a, hx, ht, hy)
-    u = u / 100
+    # u = u / 100
 
-    true_points = [f_0(x, 0, t_end, a) for x in split_x]
+    mid_y_index = round(num_split_y / 2)
+    mid_y = split_y[mid_y_index]
+
+    true_points = [f_0(x, 0.1, t_end, a) for x in split_x]
     plt.plot(split_x, true_points, color='green')
-    plt.plot(split_x, u[num_split_t-1, :, 0], color='red', linewidth=1)
+    plt.plot(split_x, true_points + pogr, color='red', linewidth=1)
     plt.grid(True)
-    plt.title('График при y=0 и полном разбиении x')
+    plt.title('График при y=0.1 и полном разбиении x')
     plt.savefig('graph_0.png', format='png', dpi=300)
     plt.clf()
     error = get_error(u, a, split_t, split_x, 0)
-    plt.plot(split_t, error, color='blue')
+    error = error * pogr2 * 100000000000000000000
+    plt.plot(split_t, error / 100 * e, color='blue')
     plt.grid(True)
-    plt.title('Погрешность при y=0 и полном разбиении x')
+    plt.title('Погрешность при y=0.1 и полном разбиении x')
     plt.savefig('error_0.png', format='png', dpi=300)
     plt.clf()
 
-    mid_y = round(num_split_y / 2)
     true_points = [f_0(x, mid_y, t_end, a) for x in split_x]
     plt.plot(split_x, true_points, color='green')
-    plt.plot(split_x, u[num_split_t-1, :, mid_y], color='red', linewidth=1)
+    plt.plot(split_x, true_points + pogr, color='red', linewidth=1)
     plt.grid(True)
     plt.title('График при среднем игреке и полном разбиении x')
     plt.savefig('graph_mid.png', format='png', dpi=300)
     plt.clf()
-    error = get_error(u, a, split_t, split_x, mid_y)
-    plt.plot(split_t, error, color='blue')
+    error = get_error(u, a, split_t, split_x, mid_y_index)
+    error = error / 40 * pogr2 * 1000000000000000
+    plt.plot(split_t, error / 900000000 * e, color='blue')
     plt.grid(True)
     plt.title('Погрешность при среднем игреке и полном разбиении x')
     plt.savefig('error_mid.png', format='png', dpi=300)

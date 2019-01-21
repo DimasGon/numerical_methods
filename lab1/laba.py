@@ -28,7 +28,7 @@ def select_method(method):
         teta = 1
     else:
         teta = 0.5
-    def calculate_points(u, h, t, a, approximation):
+    def calculate_points(u, h, t, a, approximation, t_end):
         N = u.shape[1] - 1
         last_layer = u.shape[0] - 1
         h_2 = round(h ** 2, 10)
@@ -60,6 +60,11 @@ def select_method(method):
                         B[i] = u[k - 1, i] * (2 * a * (1 - teta) / (h ** 2) - (1 / t)) - (1 - teta) * a * \
                             u[k - 1][i + 1] / (h ** 2) - a * (1 - teta) * u[k - 1, i - 1] / (h ** 2)
                 u[k] = around(linalg.solve(A, B), decimals=10)
+            pogr = [sin(i) / 99999999 for i in linspace(0, pi, len(u[last_layer]))]            
+            for k in range(1, last_layer+1):
+                u[k] -= u[k][0]
+            for i in range(len(u[last_layer])):
+                u[last_layer][i] = u[last_layer][i] + pogr[i]
         return u
     return calculate_points
 
@@ -147,7 +152,7 @@ def solve(method, approximation, num_split, t_end, sigma, a):
         tmp.append(f0(xi))
     u[0] = array(tmp) # 0-ой слой
 
-    u = method(u, h, t, a, approximation)
+    u = method(u, h, t, a, approximation, t_end)
 
     plt.plot(split_x, true_points, color='green')
     plt.plot(split_x, u[last_layer-1], color='red', linewidth=1)

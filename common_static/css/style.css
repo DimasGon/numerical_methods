@@ -19,6 +19,10 @@ a {
 a:hover {
     color: blue;
 }
+.big {
+    width: 400px;
+    height: 300px;
+}
 .form-img {
     display: flex;
     width: 100%; 
